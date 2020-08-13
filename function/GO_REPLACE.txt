@@ -1,0 +1,1 @@
+replace github.com/4406arthur/fn-job/pkg/apis => ./function/handlers

@@ -1,0 +1,14 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://35.221.192.239:31112
+functions:
+  job:
+    lang: golang-middleware
+    handler: ./function
+    image: arthurma/fn-job:v0.0.1-alpha
+    build_args:
+      GO111MODULE: on
+    environment:
+      JOB_NAMESPACE: mlass-job
+    
