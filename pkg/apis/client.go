@@ -36,11 +36,10 @@ func NewK8sCli(massterURL, kubeconfig string) (*kubernetes.Clientset, error) {
 }
 
 //GenJobSpec ...
-func GenJobSpec(jobName, image, namespace string, entryPoint []string, command []string) *batchv1.Job {
+func GenJobSpec(jobName, image string, entryPoint []string, command []string) *batchv1.Job {
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      jobName,
-			Namespace: namespace,
+			Name: jobName,
 		},
 		Spec: batchv1.JobSpec{
 			Template: apiv1.PodTemplateSpec{

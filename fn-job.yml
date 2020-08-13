@@ -6,7 +6,7 @@ functions:
   job:
     lang: golang-middleware
     handler: ./function
-    image: arthurma/fn-job:v0.0.2-alpha
+    image: arthurma/fn-job:v0.0.4-alpha
     build_args:
       GO111MODULE: on
     environment:

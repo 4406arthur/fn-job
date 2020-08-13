@@ -3,7 +3,6 @@ package function
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -44,13 +43,15 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		panic(err)
 	}
-	namespace := os.Getenv("JOB_NAMESPACE")
-	fmt.Printf("job deploy namespace is: %s", namespace)
+	namespace := "mlaas-job"
+	if s := os.Getenv("JOB_NAMESPACE"); len(s) > 0 {
+		namespace = s
+	}
 
 	kubeCli, _ := apis.NewK8sCli("", "")
-	_, err = kubeCli.BatchV1().Jobs("default").Create(
+	_, err = kubeCli.BatchV1().Jobs(namespace).Create(
 		context.TODO(),
-		apis.GenJobSpec(rq.Job, rq.Image, namespace, rq.EntryPoint, rq.Command),
+		apis.GenJobSpec(rq.Job, rq.Image, rq.EntryPoint, rq.Command),
 		metav1.CreateOptions{},
 	)
 	if err != nil {
