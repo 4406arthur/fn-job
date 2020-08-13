@@ -3,14 +3,16 @@ package function
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 
-	"gitlab.com/4406arthur/faas-job/pkg/apis"
+	"github.com/4406arthur/fn-job/pkg/apis"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+//Payload for http request
 type Payload struct {
 	Job        string   `json:"job"`
 	Image      string   `json:"image"`
@@ -18,6 +20,7 @@ type Payload struct {
 	Command    []string `json:"command"`
 }
 
+//Handle ...
 func Handle(w http.ResponseWriter, r *http.Request) {
 	var input []byte
 
@@ -42,6 +45,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	namespace := os.Getenv("JOB_NAMESPACE")
+	fmt.Printf("job deploy namespace is: %s", namespace)
 
 	kubeCli, _ := apis.NewK8sCli("", "")
 	_, err = kubeCli.BatchV1().Jobs("default").Create(

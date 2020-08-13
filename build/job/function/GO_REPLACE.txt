@@ -1,1 +1,1 @@
-replace gitlab.com/4406arthur/faas-job/pkg/apis => ./function/handlers
+replace github.com/4406arthur/fn-job/pkg/apis => ./function/handlers

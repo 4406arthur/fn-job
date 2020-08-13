@@ -6,9 +6,9 @@ functions:
   job:
     lang: golang-middleware
     handler: ./function
-    image: arthurma/fn-job:v0.0.1-alpha
+    image: arthurma/fn-job:v0.0.2-alpha
     build_args:
       GO111MODULE: on
     environment:
-      JOB_NAMESPACE: mlass-job
+      JOB_NAMESPACE: mlaas-job
     

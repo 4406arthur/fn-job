@@ -3,6 +3,7 @@ package function
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -44,6 +45,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	namespace := os.Getenv("JOB_NAMESPACE")
+	fmt.Printf("job deploy namespace is: %s", namespace)
 
 	kubeCli, _ := apis.NewK8sCli("", "")
 	_, err = kubeCli.BatchV1().Jobs("default").Create(
