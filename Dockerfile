@@ -1,5 +1,5 @@
 FROM openfaas/of-watchdog:0.7.7 as watchdog
-FROM golang:1.13-alpine3.11 as build
+FROM golang:1.14.7-alpine3.12 as build
 
 RUN apk --no-cache add git
 
@@ -11,9 +11,6 @@ ENV CGO_ENABLED=0
 RUN mkdir -p /go/src/handler
 WORKDIR /go/src/handler
 COPY . .
-
-# Add user overrides to the root go.mod, which is the only place "replace" can be used
-RUN cat function/GO_REPLACE.txt >> ./go.mod || exit 0
 
 # Run a gofmt and exclude all vendored code.
 # RUN test -z "$(gofmt -l $(find . -type f -name '*.go' -not -path "./vendor/*" -not -path "./function/vendor/*"))" || { echo "Run \"gofmt -s -w\" on your Golang code"; exit 1; }

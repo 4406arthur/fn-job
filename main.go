@@ -12,7 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"handler/function"
+	"github.com/4406arthur/fn-job/function"
 )
 
 var (

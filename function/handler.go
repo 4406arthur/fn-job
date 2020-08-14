@@ -7,12 +7,8 @@ import (
 	"net/http"
 	"os"
 
-	batchv1 "k8s.io/api/batch/v1"
-	apiv1 "k8s.io/api/core/v1"
+	"github.com/4406arthur/fn-job/pkg/sdk"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 )
 
 //Payload for http request
@@ -52,10 +48,10 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		namespace = s
 	}
 
-	kubeCli, _ := newK8sCli("", "")
+	kubeCli, _ := sdk.NewK8sCli("", "")
 	_, err = kubeCli.BatchV1().Jobs(namespace).Create(
 		context.TODO(),
-		genJobSpec(rq.Job, rq.Image, rq.EntryPoint, rq.Command),
+		sdk.GenJobSpec(rq.Job, rq.Image, rq.EntryPoint, rq.Command),
 		metav1.CreateOptions{},
 	)
 	if err != nil {
@@ -63,52 +59,4 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 	w.WriteHeader(http.StatusOK)
-}
-
-func newK8sCli(massterURL, kubeconfig string) (*kubernetes.Clientset, error) {
-
-	if kubeconfig == "" && massterURL == "" {
-		//klog.Warningf("Neither --kubeconfig nor --master was specified.  Using the inClusterConfig.  This might not work.")
-		kubeconfig, err := restclient.InClusterConfig()
-		if err != nil {
-			panic(err.Error())
-		}
-		clientset, err := kubernetes.NewForConfig(kubeconfig)
-		return clientset, nil
-	}
-
-	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags(massterURL, kubeconfig)
-	if err != nil {
-		panic(err.Error())
-	}
-	// create the clientset
-	clientset, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		panic(err.Error())
-	}
-	return clientset, nil
-}
-
-func genJobSpec(jobName, image string, entryPoint []string, command []string) *batchv1.Job {
-	return &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: jobName,
-		},
-		Spec: batchv1.JobSpec{
-			Template: apiv1.PodTemplateSpec{
-				Spec: apiv1.PodSpec{
-					Containers: []apiv1.Container{
-						{
-							Name:    jobName,
-							Image:   image,
-							Command: entryPoint,
-							Args:    command,
-						},
-					},
-					RestartPolicy: apiv1.RestartPolicyNever,
-				},
-			},
-		},
-	}
 }
