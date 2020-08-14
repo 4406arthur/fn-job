@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/4406arthur/fn-job/pkg/apis"
+	"github.com/4406arthur/fn-job/pkg/sdk"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -48,10 +48,10 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		namespace = s
 	}
 
-	kubeCli, _ := apis.NewK8sCli("", "")
+	kubeCli, _ := sdk.NewK8sCli("", "")
 	_, err = kubeCli.BatchV1().Jobs(namespace).Create(
 		context.TODO(),
-		apis.GenJobSpec(rq.Job, rq.Image, rq.EntryPoint, rq.Command),
+		sdk.GenJobSpec(rq.Job, rq.Image, rq.EntryPoint, rq.Command),
 		metav1.CreateOptions{},
 	)
 	if err != nil {
