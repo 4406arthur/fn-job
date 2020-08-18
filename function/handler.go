@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"os"
 
 	"github.com/4406arthur/fn-job/pkg/sdk"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -13,8 +12,9 @@ import (
 
 //Payload for http request
 type Payload struct {
-	Job        string   `json:"job"`
+	JobID      string   `json:"jobID"`
 	Image      string   `json:"image"`
+	Namesapce  string   `json:"namespace"`
 	EntryPoint []string `json:"entryPoint"`
 	Command    []string `json:"command"`
 }
@@ -43,20 +43,17 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		panic(err)
 	}
-	namespace := "mlaas-job"
-	if s := os.Getenv("JOB_NAMESPACE"); len(s) > 0 {
-		namespace = s
-	}
 
 	kubeCli, _ := sdk.NewK8sCli("", "")
-	_, err = kubeCli.BatchV1().Jobs(namespace).Create(
+	_, err = kubeCli.BatchV1().Jobs(rq.Namesapce).Create(
 		context.TODO(),
-		sdk.GenJobSpec(rq.Job, rq.Image, rq.EntryPoint, rq.Command),
+		sdk.GenJobSpec(rq.JobID, rq.Image, rq.EntryPoint, rq.Command),
 		metav1.CreateOptions{},
 	)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		panic(err)
 	}
+
 	w.WriteHeader(http.StatusOK)
 }

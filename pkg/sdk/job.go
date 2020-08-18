@@ -7,17 +7,17 @@ import (
 )
 
 //GenJobSpec used gen a job resource defined
-func GenJobSpec(jobName, image string, entryPoint []string, command []string) *batchv1.Job {
+func GenJobSpec(jobID, image string, entryPoint []string, command []string) *batchv1.Job {
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: jobName,
+			Name: jobID,
 		},
 		Spec: batchv1.JobSpec{
 			Template: apiv1.PodTemplateSpec{
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
-							Name:    jobName,
+							Name:    "retrain-job",
 							Image:   image,
 							Command: entryPoint,
 							Args:    command,
