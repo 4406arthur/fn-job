@@ -7,6 +7,6 @@ spec:
   environment:
     JOB_NAMESPACE: mlaas-job
   handler: ./handler
-  image: arthurma/fn-job:v0.0.4-alpha
+  image: arthurma/fn-job:v0.0.5-alpha
   name: job
   readOnlyRootFilesystem: false
