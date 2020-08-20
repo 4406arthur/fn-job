@@ -4,9 +4,7 @@ metadata:
   name: job
   namespace: openfaas-fn
 spec:
-  environment:
-    JOB_NAMESPACE: mlaas-job
+  image: arthurma/fn-job:v0.0.6-alpha
   handler: ./handler
-  image: arthurma/fn-job:v0.0.5-alpha
   name: job
   readOnlyRootFilesystem: false

@@ -45,9 +45,11 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	kubeCli, _ := sdk.NewK8sCli("", "")
+	//give a specific label
+	labels := map[string]string{"category": "mlaas-job"}
 	_, err = kubeCli.BatchV1().Jobs(rq.Namesapce).Create(
 		context.TODO(),
-		sdk.GenJobSpec(rq.JobID, rq.Image, rq.EntryPoint, rq.Command),
+		sdk.GenJobSpec(rq.JobID, rq.Image, rq.EntryPoint, rq.Command, labels),
 		metav1.CreateOptions{},
 	)
 	if err != nil {
