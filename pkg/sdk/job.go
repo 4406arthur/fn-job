@@ -24,6 +24,16 @@ func GenJobSpec(jobID, image string, entryPoint []string, command []string, labe
 							Image:   image,
 							Command: entryPoint,
 							Args:    command,
+							Env: []apiv1.EnvVar{
+								{
+									Name: "MY_POD_NAMESPACE",
+									ValueFrom: &apiv1.EnvVarSource{
+										FieldRef: &apiv1.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
+								},
+							},
 						},
 					},
 					RestartPolicy: apiv1.RestartPolicyNever,
