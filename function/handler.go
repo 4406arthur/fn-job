@@ -7,16 +7,18 @@ import (
 	"net/http"
 
 	"github.com/4406arthur/fn-job/pkg/sdk"
+	v1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 //Payload for http request
 type Payload struct {
-	JobID      string   `json:"jobID"`
-	Image      string   `json:"image"`
-	Namesapce  string   `json:"namespace"`
-	EntryPoint []string `json:"entryPoint"`
-	Command    []string `json:"command"`
+	JobID      string             `json:"jobID"`
+	Image      string             `json:"image"`
+	Config     *sdk.ConfigSetting `json:"config,omitempty"`
+	Namesapce  string             `json:"namespace"`
+	EntryPoint []string           `json:"entryPoint"`
+	Command    []string           `json:"command"`
 }
 
 //Handle ...
@@ -47,9 +49,17 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	kubeCli, _ := sdk.NewK8sCli("", "")
 	//give a specific label
 	labels := map[string]string{"category": "mlaas-job"}
+
+	var jobSpec *v1.Job
+	if rq.Config == nil {
+		jobSpec = sdk.GenJobSpec(rq.JobID, rq.Image, rq.EntryPoint, rq.Command, labels)
+	} else {
+		jobSpec = sdk.GenAdvanceJobSpec(rq.JobID, rq.Image, rq.Config, rq.EntryPoint, rq.Command, labels)
+	}
+
 	_, err = kubeCli.BatchV1().Jobs(rq.Namesapce).Create(
 		context.TODO(),
-		sdk.GenJobSpec(rq.JobID, rq.Image, rq.EntryPoint, rq.Command, labels),
+		jobSpec,
 		metav1.CreateOptions{},
 	)
 	if err != nil {
