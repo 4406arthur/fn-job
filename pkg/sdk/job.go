@@ -14,11 +14,14 @@ type ConfigSetting struct {
 
 //GenJobSpec used gen a job resource defined
 func GenJobSpec(jobID, image string, entryPoint []string, command []string, labels map[string]string) *batchv1.Job {
+	// TODO: retry should be changeable ?
+	backoffLimit := int32(3)
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: jobID,
 		},
 		Spec: batchv1.JobSpec{
+			BackoffLimit: &backoffLimit,
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
@@ -51,11 +54,14 @@ func GenJobSpec(jobID, image string, entryPoint []string, command []string, labe
 
 //GenAdvanceJobSpec used gen a job resource defined
 func GenAdvanceJobSpec(jobID, image string, cf *ConfigSetting, entryPoint []string, command []string, labels map[string]string) *batchv1.Job {
+	// TODO: retry should be changeable ?
+	backoffLimit := int32(3)
 	return &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: jobID,
 		},
 		Spec: batchv1.JobSpec{
+			BackoffLimit: &backoffLimit,
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
