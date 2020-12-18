@@ -12,104 +12,99 @@ type ConfigSetting struct {
 	ConfigDir    string `json:"configDir"`
 }
 
+//WebhookSetting ...
+type WebhookSetting struct {
+	Endpoint string `json:"endpoint"`
+	Payload  string `json:"payload"`
+}
+
 //GenJobSpec used gen a job resource defined
-func GenJobSpec(jobID, image string, entryPoint []string, command []string, labels map[string]string) *batchv1.Job {
+func GenJobSpec(jobID, image string, cf *ConfigSetting, entryPoint []string, command []string, labels map[string]string, webhookSetting *WebhookSetting) *batchv1.Job {
 	// TODO: retry should be changeable ?
-	backoffLimit := int32(3)
-	return &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: jobID,
+	backoffLimit := int32(0)
+	ttlSecondsAfterFinished := int32(60)
+	podSpec := apiv1.PodSpec{
+		Containers: []apiv1.Container{
+			{
+				Name:    "smile-job",
+				Image:   image,
+				Command: entryPoint,
+				Args:    command,
+				Env: []apiv1.EnvVar{
+					{
+						Name: "MY_POD_NAMESPACE",
+						ValueFrom: &apiv1.EnvVarSource{
+							FieldRef: &apiv1.ObjectFieldSelector{
+								FieldPath: "metadata.namespace",
+							},
+						},
+					},
+				},
+			},
 		},
+		RestartPolicy: apiv1.RestartPolicyNever,
+	}
+
+	//case for need injection configmap
+	if cf != nil {
+		//declare a volume for configmap
+		podSpec.Volumes = []apiv1.Volume{
+			{
+				Name: "cofig-vol",
+				VolumeSource: apiv1.VolumeSource{
+					ConfigMap: &apiv1.ConfigMapVolumeSource{
+						LocalObjectReference: apiv1.LocalObjectReference{
+							Name: cf.ConfigMapRef,
+						},
+					},
+				},
+			},
+		}
+		//volumn mount
+		podSpec.Containers[0].VolumeMounts = []apiv1.VolumeMount{
+			{
+				Name:      "cofig-vol",
+				MountPath: cf.ConfigDir,
+			},
+		}
+		//pass a env var for app know configmap dir path
+		podSpec.Containers[0].Env = append(podSpec.Containers[0].Env, apiv1.EnvVar{
+			Name:  "CONFIGDIR",
+			Value: cf.ConfigDir,
+		})
+	}
+
+	objectMeta := metav1.ObjectMeta{
+		Name: jobID,
+	}
+
+	if webhookSetting != nil {
+		//injection into annotations
+		objectMeta.Annotations = decodeWebhookConfig(webhookSetting)
+		labels["webhook-enable"] = "true"
+	} else {
+		labels["webhook-enable"] = "false"
+	}
+
+	return &batchv1.Job{
+		ObjectMeta: objectMeta,
 		Spec: batchv1.JobSpec{
 			BackoffLimit: &backoffLimit,
+			//FEATURE STATE: Kubernetes v1.12 [alpha]
+			TTLSecondsAfterFinished: &ttlSecondsAfterFinished,
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labels,
 				},
-				Spec: apiv1.PodSpec{
-					Containers: []apiv1.Container{
-						{
-							Name:    "retrain-job",
-							Image:   image,
-							Command: entryPoint,
-							Args:    command,
-							Env: []apiv1.EnvVar{
-								{
-									Name: "MY_POD_NAMESPACE",
-									ValueFrom: &apiv1.EnvVarSource{
-										FieldRef: &apiv1.ObjectFieldSelector{
-											FieldPath: "metadata.namespace",
-										},
-									},
-								},
-							},
-						},
-					},
-					RestartPolicy: apiv1.RestartPolicyNever,
-				},
+				Spec: podSpec,
 			},
 		},
 	}
 }
 
-//GenAdvanceJobSpec used gen a job resource defined
-func GenAdvanceJobSpec(jobID, image string, cf *ConfigSetting, entryPoint []string, command []string, labels map[string]string) *batchv1.Job {
-	// TODO: retry should be changeable ?
-	backoffLimit := int32(3)
-	return &batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: jobID,
-		},
-		Spec: batchv1.JobSpec{
-			BackoffLimit: &backoffLimit,
-			Template: apiv1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: apiv1.PodSpec{
-					Containers: []apiv1.Container{
-						{
-							Name:    "retrain-job",
-							Image:   image,
-							Command: entryPoint,
-							Args:    command,
-							Env: []apiv1.EnvVar{
-								{
-									Name: "MY_POD_NAMESPACE",
-									ValueFrom: &apiv1.EnvVarSource{
-										FieldRef: &apiv1.ObjectFieldSelector{
-											FieldPath: "metadata.namespace",
-										},
-									},
-								},
-								{
-									Name:  "CONFIGDIR",
-									Value: cf.ConfigDir,
-								},
-							},
-							VolumeMounts: []apiv1.VolumeMount{
-								{
-									Name:      "cofig-vol",
-									MountPath: cf.ConfigDir,
-								},
-							},
-						},
-					},
-					RestartPolicy: apiv1.RestartPolicyNever,
-					Volumes: []apiv1.Volume{
-						{
-							Name: "cofig-vol",
-							VolumeSource: apiv1.VolumeSource{
-								ConfigMap: &apiv1.ConfigMapVolumeSource{
-									LocalObjectReference: apiv1.LocalObjectReference{
-										Name: cf.ConfigMapRef,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
+func decodeWebhookConfig(ws *WebhookSetting) map[string]string {
+	m := make(map[string]string)
+	m["webhook-endpoint"] = ws.Endpoint
+	m["webhook-payload"] = ws.Payload
+	return m
 }

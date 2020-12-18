@@ -13,12 +13,13 @@ import (
 
 //Payload for http request
 type Payload struct {
-	JobID      string             `json:"jobID"`
-	Image      string             `json:"image"`
-	Config     *sdk.ConfigSetting `json:"config,omitempty"`
-	Namesapce  string             `json:"namespace"`
-	EntryPoint []string           `json:"entryPoint"`
-	Command    []string           `json:"command"`
+	JobID      string              `json:"jobID"`
+	Image      string              `json:"image"`
+	Config     *sdk.ConfigSetting  `json:"config,omitempty"`
+	Namesapce  string              `json:"namespace"`
+	EntryPoint []string            `json:"entryPoint"`
+	Command    []string            `json:"command"`
+	Webhook    *sdk.WebhookSetting `json:"webhook,omitempty"`
 }
 
 //Handle ...
@@ -51,11 +52,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 	labels := map[string]string{"category": "mlaas-job"}
 
 	var jobSpec *v1.Job
-	if rq.Config == nil {
-		jobSpec = sdk.GenJobSpec(rq.JobID, rq.Image, rq.EntryPoint, rq.Command, labels)
-	} else {
-		jobSpec = sdk.GenAdvanceJobSpec(rq.JobID, rq.Image, rq.Config, rq.EntryPoint, rq.Command, labels)
-	}
+	jobSpec = sdk.GenJobSpec(rq.JobID, rq.Image, rq.Config, rq.EntryPoint, rq.Command, labels, rq.Webhook)
 
 	_, err = kubeCli.BatchV1().Jobs(rq.Namesapce).Create(
 		context.TODO(),

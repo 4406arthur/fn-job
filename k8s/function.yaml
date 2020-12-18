@@ -4,7 +4,7 @@ metadata:
   name: job
   namespace: openfaas-fn
 spec:
-  image: arthurma/fn-job:v0.0.1-beta
+  image: arthurma/fn-job:v1.0.3
   handler: ./handler
   name: job
   readOnlyRootFilesystem: false
