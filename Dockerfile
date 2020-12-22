@@ -1,8 +1,7 @@
 FROM openfaas/of-watchdog:0.7.7 as watchdog
-FROM golang:1.14.7-alpine3.12 as build
+FROM golang:1.15.5-alpine3.12 as build
 
-RUN apk --no-cache add git
-
+# RUN apk --no-cache add git
 COPY --from=watchdog /fwatchdog /usr/bin/fwatchdog
 RUN chmod +x /usr/bin/fwatchdog
 
@@ -26,8 +25,8 @@ RUN go build -o handler .
 
 FROM alpine:3.11
 # Add non root user and certs
-RUN apk --no-cache add ca-certificates \
-    && addgroup -S app && adduser -S -g app app \
+RUN \
+    addgroup -S app && adduser -S -g app app \
     && mkdir -p /home/app \
     && chown app /home/app
 
