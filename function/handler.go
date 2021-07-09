@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/4406arthur/fn-job/pkg/sdk"
@@ -31,6 +32,9 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 
 		// read request payload
 		reqBody, err := ioutil.ReadAll(r.Body)
+
+		// log caller info
+		log.Printf("caller info: %s %s %s\n", r.UserAgent(), r.RemoteAddr, reqBody)
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
