@@ -22,7 +22,7 @@ type WebhookSetting struct {
 func GenJobSpec(jobID, image string, cf *ConfigSetting, entryPoint []string, command []string, labels map[string]string, webhookSetting *WebhookSetting) *batchv1.Job {
 	// TODO: retry should be changeable ?
 	backoffLimit := int32(0)
-	ttlSecondsAfterFinished := int32(60)
+	ttlSecondsAfterFinished := int32(3600)
 	podSpec := apiv1.PodSpec{
 		Containers: []apiv1.Container{
 			{
@@ -30,6 +30,16 @@ func GenJobSpec(jobID, image string, cf *ConfigSetting, entryPoint []string, com
 				Image:   image,
 				Command: entryPoint,
 				Args:    command,
+				// Resources: apiv1.ResourceRequirements{
+				// 	Limits: apiv1.ResourceList{
+				// 		"cpu":    resource.MustParse(cpuLimit),
+				// 		"memory": resource.MustParse(memLimit),
+				// 	},
+				// 	Requests: apiv1.ResourceList{
+				// 		"cpu":    resource.MustParse(cpuReq),
+				// 		"memory": resource.MustParse(memReq),
+				// 	},
+				// },
 				Env: []apiv1.EnvVar{
 					{
 						Name: "MY_POD_NAMESPACE",

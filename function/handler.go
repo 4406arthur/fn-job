@@ -8,19 +8,26 @@ import (
 	"net/http"
 
 	"github.com/4406arthur/fn-job/pkg/sdk"
-	v1 "k8s.io/api/batch/v1"
+	"github.com/go-playground/validator"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 //Payload for http request
 type Payload struct {
-	JobID      string              `json:"jobID"`
-	Image      string              `json:"image"`
+	JobID      string              `json:"jobID" validate:"required,hostname_rfc1123"`
+	Image      string              `json:"image" validate:"required"`
 	Config     *sdk.ConfigSetting  `json:"config,omitempty"`
-	Namesapce  string              `json:"namespace"`
-	EntryPoint []string            `json:"entryPoint"`
-	Command    []string            `json:"command"`
+	Namespace  string              `json:"namespace" validate:"required,hostname_rfc1123"`
+	EntryPoint []string            `json:"entryPoint" validate:"required"`
+	Command    []string            `json:"command" validate:"required"`
 	Webhook    *sdk.WebhookSetting `json:"webhook,omitempty"`
+}
+
+// use a single instance of Validate, it caches struct info
+var validate *validator.Validate
+
+func init() {
+	validate = validator.New()
 }
 
 //Handle ...
@@ -51,14 +58,19 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	err = validate.Struct(rq)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		panic(err)
+	}
+
 	kubeCli, _ := sdk.NewK8sCli("", "")
 	//give a specific label
 	labels := map[string]string{"category": "mlaas-job"}
 
-	var jobSpec *v1.Job
-	jobSpec = sdk.GenJobSpec(rq.JobID, rq.Image, rq.Config, rq.EntryPoint, rq.Command, labels, rq.Webhook)
+	jobSpec := sdk.GenJobSpec(rq.JobID, rq.Image, rq.Config, rq.EntryPoint, rq.Command, labels, rq.Webhook)
 
-	_, err = kubeCli.BatchV1().Jobs(rq.Namesapce).Create(
+	_, err = kubeCli.BatchV1().Jobs(rq.Namespace).Create(
 		context.TODO(),
 		jobSpec,
 		metav1.CreateOptions{},
